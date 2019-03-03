@@ -1,0 +1,48 @@
+{
+    "name": "primedigital/ez-sitemap",
+    "description": "Prime eZ Sitemap",
+    "type": "ezplatform-bundle",
+    "keywords": [
+        "ezpublish",
+        "ezplatform",
+        "primedigital",
+        "sitemap"
+    ],
+    "homepage": "https://bitbucket.org/primedigital/primeezsitemapbundle",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Prime",
+            "homepage": "https://www.prime.ch"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Prime\\EzSiteMap\\": "lib",
+            "Prime\\Bundle\\EzSiteMapBundle\\": "bundle"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Prime\\EzSiteMap\\Tests\\": "tests/lib",
+            "Prime\\Bundle\\EzSiteMapBundle\\Tests\\": "tests/bundle"
+        }
+    },
+    "require": {
+        "php": "^7.1",
+        "symfony/symfony": "^3.4.11",
+        "ezsystems/ezpublish-kernel": "^7.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7.4",
+        "phpstan/phpstan": "^0.11.1",
+        "friendsofphp/php-cs-fixer": "^2.12"
+    },
+    "scripts": {
+        "analyse": "@php vendor/bin/phpstan analyse -l 1 bundle",
+        "fix": "@php vendor/bin/php-cs-fixer fix",
+        "test": "@php vendor/bin/phpunit -c phpunit.xml.dist --colors=always"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

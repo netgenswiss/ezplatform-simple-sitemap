@@ -1,0 +1,8 @@
+parameters:
+    prime.ez_sitemap.default.sitemap.domain: '%ngmore.default.site_domain%'
+    prime.ez_sitemap.default.sitemap.content_type_list:
+        - ng_article
+        - ng_feedback_form
+        - ng_frontpage
+        - ng_landing_page
+    prime.ez_sitemap.default.sitemap.max_items_per_sitemap: 500

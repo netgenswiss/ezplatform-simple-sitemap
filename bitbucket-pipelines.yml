@@ -1,0 +1,29 @@
+image: php:7.1
+
+pipelines:
+    default:
+        -   step:
+                caches:
+                    - composer
+                script:
+                    - php -v
+                    - apt-get update && apt-get install -y unzip zlib1g-dev libicu-dev g++ libxml2-dev curl libcurl4-gnutls-dev libpng-dev libxslt-dev
+                    - docker-php-ext-install intl
+                    - docker-php-ext-enable intl
+                    - docker-php-ext-install xml
+                    - docker-php-ext-enable xml
+                    - docker-php-ext-install curl
+                    - docker-php-ext-enable curl
+                    - docker-php-ext-install pdo_mysql
+                    - docker-php-ext-enable pdo_mysql
+                    - docker-php-ext-install mysqli
+                    - docker-php-ext-enable mysqli
+                    - docker-php-ext-install gd
+                    - docker-php-ext-enable gd
+                    - docker-php-ext-install xsl
+                    - docker-php-ext-enable xsl
+                    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+                    - php -d memory_limit=-1 /usr/local/bin/composer install
+                    - composer test
+                    - composer fix
+                    - composer analyse

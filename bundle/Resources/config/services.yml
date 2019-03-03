@@ -1,0 +1,27 @@
+parameters:
+    prime.ez_sitemap.command.generate_sitemap.class: Prime\Bundle\EzSiteMapBundle\Command\GenerateSitemapCommand
+    prime.ez_sitemap.controller.sitemap.class: Prime\Bundle\EzSiteMapBundle\Controller\SitemapController
+    
+services:
+    prime.ez_sitemap.command.generate_sitemap:
+        class: '%prime.ez_sitemap.command.generate_sitemap.class%'
+        arguments:
+            - '@ezpublish.config.resolver'
+            - '@netgen.ezplatform_site.filter_service'
+            - '@ezpublish.api.service.url_alias'
+            - '%prime.ez_sitemap.default.sitemap.domain%'
+            - '%prime.ez_sitemap.default.sitemap.content_type_list%'
+            - '%prime.ez_sitemap.default.sitemap.max_items_per_sitemap%'
+            - '%webroot_dir%'
+        tags:
+            -  { name: console.command }
+
+    prime.ez_sitemap.controller.sitemap:
+        class: '%prime.ez_sitemap.controller.sitemap.class%'
+        parent: netgen.ezplatform_site.controller.base
+        arguments:
+            - '@ezpublish.config.resolver'
+            - '@router'
+            - '@netgen_open_graph.meta_tag_collector'
+            - '%prime.ez_sitemap.default.sitemap.domain%'
+            - '%webroot_dir%'
