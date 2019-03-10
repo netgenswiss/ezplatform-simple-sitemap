@@ -4,9 +4,9 @@ namespace Prime\Bundle\EzSiteMapBundle\Command;
 
 use eZ\Publish\Core\MVC\ConfigResolverInterface;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
+//use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
+//use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Output\OutputInterface;
 use Netgen\EzPlatformSiteApi\API\Values\Location;
@@ -15,13 +15,13 @@ use eZ\Publish\API\Repository\Values\Content\Query\SortClause;
 use eZ\Publish\API\Repository\Values\Content\Query\Criterion;
 use Netgen\EzPlatformSiteApi\API\FilterService;
 use eZ\Publish\API\Repository\UrlAliasService;
-use Prime\EzSiteMapBundle\Sitemap;
+use Prime\EzSiteMap\Sitemap\Sitemap;
 
 /**
  * Class GenerateSitemapCommand
- * 
+ *
  * Code mostly by Hrvoje Knežević
- * 
+ *
  * @package Prime\Bundle\EzSiteMapBundle\Command
  */
 class GenerateSitemapCommand extends Command
@@ -124,7 +124,7 @@ class GenerateSitemapCommand extends Command
      */
     protected function configure()
     {
-        $this->setName('prime:generate:sitemap')
+        $this->setName('prime:sitemap:generate')
             ->setDescription('Generate sitemap');
     }
 

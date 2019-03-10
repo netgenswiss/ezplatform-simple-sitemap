@@ -1,6 +1,6 @@
 <?php
 
-namespace Prime\EzSiteMap;
+namespace Prime\EzSiteMap\Sitemap;
 
 use DOMDocument;
 

@@ -1,5 +1,5 @@
 parameters:
-    prime.ez_sitemap.default.sitemap.domain: '%ngmore.default.site_domain%'
+    prime.ez_sitemap.default.sitemap.domain: '%ngsite.default.site_domain%'
     prime.ez_sitemap.default.sitemap.content_type_list:
         - ng_article
         - ng_feedback_form
