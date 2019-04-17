@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Prime\Bundle\EzSiteMapBundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;

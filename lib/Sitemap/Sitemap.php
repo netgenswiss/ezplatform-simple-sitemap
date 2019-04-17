@@ -3,11 +3,8 @@
 namespace Prime\EzSiteMap\Sitemap;
 
 use DOMDocument;
+use DateTime;
 
-/**
- * Class Sitemap
- * @package Prime\eZ\Sitemap
- */
 class Sitemap
 {
     /**
@@ -20,24 +17,18 @@ class Sitemap
      */
     protected $doc;
 
-    /**
-     * 
-     */
     public function __construct()
     {
         $this->doc = new DOMDocument("1.0", 'UTF-8');
         $this->urlSet = $this->doc->createElement('urlset');
-        $this->urlSet->setAttribute( "xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9" );
+        $this->urlSet->setAttribute("xmlns", "http://www.sitemaps.org/schemas/sitemap/0.9");
     }
 
-    /**
-     *
-     */
-    public function addEntry( $mainUrl, $modified, $priority = 0.5, $alternateUrls = false )
+    public function addEntry(string $mainUrl, DateTime $modified, float $priority = 0.5, bool $alternateUrls = false): void
     {
         $urlEl      = $this->doc->createElement( 'url' );
         $loc        = $this->doc->createElement( 'loc', $mainUrl );
-        $lastMod    = $this->doc->createElement( 'lastmod', $modified );
+        $lastMod    = $this->doc->createElement( 'lastmod', $modified->format('c') );
         $priority   = $this->doc->createElement( 'priority', $priority );
 
         $urlEl->appendChild( $loc );
@@ -66,13 +57,11 @@ class Sitemap
         $this->urlSet->appendChild( $urlEl );
     }
 
-    /**
-     * @return string
-     */
-    public function export()
+    public function export(): string
     {
-        $this->doc->appendChild( $this->urlSet );
+        $this->doc->appendChild($this->urlSet);
         $this->doc->formatOutput = true;
+
         return $this->doc->saveXML();
     }
 

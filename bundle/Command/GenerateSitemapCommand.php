@@ -1,60 +1,47 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Prime\Bundle\EzSiteMapBundle\Command;
 
-use eZ\Publish\Core\MVC\ConfigResolverInterface;
-use Symfony\Component\Console\Command\Command;
-//use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Input\InputInterface;
-//use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Helper\ProgressBar;
-use Symfony\Component\Console\Output\OutputInterface;
-use Netgen\EzPlatformSiteApi\API\Values\Location;
-use eZ\Publish\API\Repository\Values\Content\LocationQuery;
-use eZ\Publish\API\Repository\Values\Content\Query\SortClause;
-use eZ\Publish\API\Repository\Values\Content\Query\Criterion;
-use Netgen\EzPlatformSiteApi\API\FilterService;
 use eZ\Publish\API\Repository\UrlAliasService;
+use eZ\Publish\API\Repository\Values\Content\Search\SearchResult;
+use eZ\Publish\Core\MVC\ConfigResolverInterface;
+use eZ\Publish\Core\QueryType\QueryTypeRegistry;
+use Netgen\EzPlatformSiteApi\API\Values\Location;
+use Netgen\EzPlatformSiteApi\API\Site;
+use Prime\EzSiteMap\Sitemap\Configuration;
 use Prime\EzSiteMap\Sitemap\Sitemap;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\ProgressBar;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Filesystem\Filesystem;
 
-/**
- * Class GenerateSitemapCommand
- *
- * Code mostly by Hrvoje Knežević
- *
- * @package Prime\Bundle\EzSiteMapBundle\Command
- */
+
 class GenerateSitemapCommand extends Command
 {
+    /**
+     * If we have multiple sitemaps, generate sitemap names using the following pattern.
+     *
+     * @var string
+     */
+    public const SITEMAP_NAME_PATTERN = 'sitemap_#INDEX#.xml';
+
     /**
      * @var ConfigResolverInterface
      */
     protected $configResolver;
 
     /**
-     * @var FilterService
+     * @var \Netgen\EzPlatformSiteApi\API\FilterService
      */
     protected $filterService;
 
     /**
-     * @var UrlAliasService
+     * @var \eZ\Publish\API\Repository\UrlAliasService
      */
     protected $urlAliasService;
-
-    /**
-     * @var string
-     */
-    protected $domain;
-
-    /**
-     * @var string[]
-     */
-    protected $contentTypeList;
-
-    /**
-     * @var int
-     */
-    protected $maxItemsPerSitemap;
 
     /**
      * @var string
@@ -62,59 +49,36 @@ class GenerateSitemapCommand extends Command
     protected $webDir;
 
     /**
-     * @var string
+     * @var \Prime\EzSiteMap\Sitemap\Configuration
      */
-    protected $applicationProtocol = 'https';
+    protected $sitemapConfiguration;
 
     /**
-     * Delimits the content fetch to a specific part of the content tree
-     *
-     * @var string
+     * @var \eZ\Publish\Core\QueryType\QueryTypeRegistry
      */
-    const SITEMAP_PATH_LIMIT = "/1/2/";
-
-    /**
-     * If we have multiple sitemaps, generate sitemap names using the following pattern
-     *
-     * @var string
-     */
-    const SITEMAP_NAME_PATTERN = "sitemap_#INDEX#.xml";
-
-    /**
-     * Container folder for multiple sitemap files when we have a sitemap index in sitemap.xml
-     *
-     * @var string
-     */
-    const SITEMAPS_INDEX_PATH = "sitemaps";
+    protected $queryTypeRegistry;
 
     /**
      * GenerateSitemapCommand constructor.
      *
-     * @param \eZ\Publish\Core\MVC\ConfigResolverInterface $configResolver
-     * @param \Netgen\EzPlatformSiteApi\API\FilterService $filterService
+     * @param \eZ\Publish\Core\QueryType\QueryTypeRegistry $queryTypeRegistry
+     * @param \Netgen\EzPlatformSiteApi\API\Site $site
      * @param \eZ\Publish\API\Repository\UrlAliasService $urlAliasService
-     * @param string $domain
-     * @param array $contentTypeList
-     * @param int $maxItemsPerSitemap
+     * @param \Prime\EzSiteMap\Sitemap\Configuration $sitemapConfiguration
      * @param string $webDir
      */
     public function __construct(
-        ConfigResolverInterface $configResolver,
-        FilterService $filterService,
+        QueryTypeRegistry $queryTypeRegistry,
+        Site $site,
         UrlAliasService $urlAliasService,
-        string $domain,
-        array $contentTypeList,
-        int $maxItemsPerSitemap,
+        Configuration $sitemapConfiguration,
         string $webDir
-    )
-    {
-        $this->configResolver       = $configResolver;
-        $this->filterService        = $filterService;
-        $this->urlAliasService      = $urlAliasService;
-        $this->domain               = $domain;
-        $this->contentTypeList      = $contentTypeList;
-        $this->webDir               = $webDir;
-        $this->maxItemsPerSitemap   = $maxItemsPerSitemap;
+    ) {
+        $this->queryTypeRegistry = $queryTypeRegistry;
+        $this->site = $site;
+        $this->urlAliasService = $urlAliasService;
+        $this->sitemapConfiguration = $sitemapConfiguration;
+        $this->webDir = $webDir;
 
         parent::__construct();
     }
@@ -124,8 +88,8 @@ class GenerateSitemapCommand extends Command
      */
     protected function configure()
     {
-        $this->setName('prime:sitemap:generate')
-            ->setDescription('Generate sitemap');
+        $this->setName('prime:sitemap:generate');
+        $this->setDescription('Sitemap generation command.');
     }
 
     /**
@@ -136,35 +100,36 @@ class GenerateSitemapCommand extends Command
      *
      * @throws \RuntimeException When an error occurs
      *
-     * @return null|int null or 0 if everything went fine, or an error code
+     * @return int|null null or 0 if everything went fine, or an error code
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $this->generateGoogleSitemap($input, $output);
+
         return 0;
     }
 
-    private function generateGoogleSitemap(InputInterface $input, OutputInterface $output){
+    private function generateGoogleSitemap(InputInterface $input, OutputInterface $output)
+    {
         $output->writeln('');
-        $output->writeln( 'Generating google sitemap(s)...' );
+        $output->writeln('Generating google sitemap(s)...');
         $output->writeln('');
 
         $totalCount = $this->getTotalCount();
 
         $output->writeln('');
-        $output->writeln( "Total locations to be indexed: {$totalCount}..." );
+        $output->writeln("Total locations to be indexed: {$totalCount}...");
         $output->writeln('');
 
-        $sitemapFileCount = (int)ceil((float)$totalCount/$this->maxItemsPerSitemap);
+        $sitemapFileCount = (int) ceil((float) $totalCount / $this->sitemapConfiguration->getMaxItemsPerPage());
 
         $sitemapFiles = [];
-        if (!file_exists($this->webDir . '/' . self::SITEMAPS_INDEX_PATH)) {
-            mkdir($this->webDir . '/' . self::SITEMAPS_INDEX_PATH, 0775, true);
-        }
 
-        for($i = 1; $i <= $sitemapFileCount; $i++) {
+        $this->checkPath();
+
+        for ($i = 1; $i <= $sitemapFileCount; ++$i) {
             $sitemapName = preg_replace('/#INDEX#/i', $i, self::SITEMAP_NAME_PATTERN);
-            $sitemapWebPath = self::SITEMAPS_INDEX_PATH . '/' . $sitemapName;
+            $sitemapWebPath = $this->sitemapConfiguration->getSitemapsIndexPath() . '/' . $sitemapName;
             $sitemapFileSystemPath = $this->webDir . '/' . $sitemapWebPath;
 
             $output->writeln('');
@@ -187,7 +152,6 @@ class GenerateSitemapCommand extends Command
             // update lastMod value in sitemap index only if the sitemap file was created or modified
             if (!file_exists($sitemapFileSystemPath) || md5($generatedSitemapXML) !== md5_file($sitemapFileSystemPath)) {
                 file_put_contents($sitemapFileSystemPath, $generatedSitemapXML);
-
             }
 
             $sitemapFiles[] = $sitemapName;
@@ -195,11 +159,11 @@ class GenerateSitemapCommand extends Command
             unset($sitemap);
         }
 
-        $existingSitemapFiles = array_diff(scandir( $this->webDir . '/' . self::SITEMAPS_INDEX_PATH, SCANDIR_SORT_ASCENDING), ['..', '.']);
+        $existingSitemapFiles = array_diff(scandir($this->getPath(), SCANDIR_SORT_ASCENDING), ['..', '.']);
 
-        foreach ($existingSitemapFiles as $existingSitemapFile){
-            if(!in_array($existingSitemapFile, $sitemapFiles)){
-                $sitemapFileSystemPath = $this->webDir . '/' . self::SITEMAPS_INDEX_PATH . '/' . $existingSitemapFile;
+        foreach ($existingSitemapFiles as $existingSitemapFile) {
+            if (!in_array($existingSitemapFile, $sitemapFiles, true)) {
+                $sitemapFileSystemPath = $this->getFilePath($existingSitemapFile);
                 unlink($sitemapFileSystemPath);
             }
         }
@@ -209,52 +173,87 @@ class GenerateSitemapCommand extends Command
         $output->writeln('');
     }
 
-    private function findLocations(int $offset = 0, int $limit = 50000) {
-        $query = new LocationQuery();
-        $query->filter = new Criterion\LogicalAnd(
+    private function findLocations(int $offset = 0, int $limit = 500): SearchResult
+    {
+        $queryType = $this->queryTypeRegistry->getQueryType('SitemapLocations');
+        $query = $queryType->getQuery(
             [
-                new Criterion\Subtree( self::SITEMAP_PATH_LIMIT ),
-                new Criterion\Visibility( Criterion\Visibility::VISIBLE ),
-                new Criterion\Location\IsMainLocation( Criterion\Location\IsMainLocation::MAIN),
-                new Criterion\ContentTypeIdentifier( $this->contentTypeList )
+                'contentTypeList' => $this->sitemapConfiguration->getContentTypeList(),
+                'rootLocation' => $this->getRootLocation(),
+                'limit' => $limit,
+                'offset' => $offset,
             ]
         );
-        $query->sortClauses = [ new SortClause\Location\Depth(LocationQuery::SORT_ASC), new SortClause\DatePublished( LocationQuery::SORT_DESC ) ];
-        $query->offset = $offset;
-        $query->limit = $limit;
 
-        return $this->filterService->filterLocations( $query );
+        return $this->site
+            ->getFilterService()
+            ->filterLocations($query);
     }
 
-    private function getTotalCount() {
-        $query = new LocationQuery();
-        $query->filter = new Criterion\LogicalAnd(
+    private function getTotalCount(): int
+    {
+        $queryType = $this->queryTypeRegistry->getQueryType('SitemapLocations');
+        $query = $queryType->getQuery(
             [
-                new Criterion\Subtree( self::SITEMAP_PATH_LIMIT ),
-                new Criterion\Visibility( Criterion\Visibility::VISIBLE ),
-                new Criterion\Location\IsMainLocation( Criterion\Location\IsMainLocation::MAIN),
-                new Criterion\ContentTypeIdentifier( $this->contentTypeList )
+                'contentTypeList' => $this->sitemapConfiguration->getContentTypeList(),
+                'rootLocation' => $this->getRootLocation(),
+                'limit' => 0,
+                'offset' => 0,
             ]
         );
-        $query->sortClauses = [ new SortClause\Location\Depth(LocationQuery::SORT_ASC), new SortClause\DatePublished( LocationQuery::SORT_DESC ) ];
-        $query->offset = 0;
-        $query->limit = 1;
 
-        return $this->filterService->filterLocations( $query )->totalCount;
+        return $this->site
+            ->getFilterService()
+            ->filterLocations($query)
+            ->totalCount;
     }
 
-    private function addItemToSitemap(Sitemap $sitemap, Location $location){
-        $modified = $location->contentInfo->modificationDate->format( "c" );
-        $mainLanguageCode = $location->contentInfo->mainLanguageCode;
-        try{
-            $locationPath = $this->urlAliasService->reverseLookup( $location->innerLocation, $mainLanguageCode, true )->path;
-        }
-        catch( \Exception $e){
+    private function addItemToSitemap(Sitemap $sitemap, Location $location)
+    {
+        try {
+
+            $locationPath = $this->urlAliasService
+                ->reverseLookup(
+                    $location->innerLocation,
+                    $location->contentInfo->mainLanguageCode,
+                    true
+                )->path;
+
+        } catch (\eZ\Publish\API\Repository\Exceptions\NotFoundException $e) {
             return;
         }
-        $mainUrl = $this->applicationProtocol . "://" . $this->domain . $locationPath;
-        $priority = 1 - ( ($location->depth - 1) * 0.1);
 
-        $sitemap->addEntry( $mainUrl, $modified, $priority );
+        $mainUrl = $this->sitemapConfiguration->getProtocol() . '://' . $this->sitemapConfiguration->getDomain() . $locationPath;
+        $priority = 1 - (($location->depth - 1) * 0.1);
+
+        $sitemap->addEntry($mainUrl, $location->contentInfo->modificationDate, $priority);
+    }
+
+    protected function getRootLocation(): Location
+    {
+        return $this->site
+            ->getLoadService()
+            ->loadLocation(
+                $this->site->getSettings()->rootLocationId
+            );
+    }
+
+    protected function getPath()
+    {
+        return $this->webDir . '/' . $this->sitemapConfiguration->getSitemapsIndexPath();
+    }
+
+    protected function getFilePath($file)
+    {
+        return $this->getPath() . '/'. $file;
+    }
+
+    protected function checkPath()
+    {
+        $filesystem = new Filesystem();
+
+        if (!$filesystem->exists($this->getPath())) {
+            $filesystem->mkdir($this->getPath(), 0775);
+        }
     }
 }

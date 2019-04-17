@@ -9,7 +9,7 @@ Installation steps
 Run the following from your website root folder to install Prime eZ Sitemap Bundle:
 
 ```bash
-$ composer require primedigital/ez-sitemap:dev-master
+$ composer require primedigital/ez-sitemap
 ```
 
 ### Activate the bundle
@@ -45,4 +45,10 @@ Clear the eZ Publish caches with the following command:
 
 ```bash
 $ php app/console cache:clear
+```
+
+Do not forget to enable access to sitemap file in production .htaccess:
+
+```
+RewriteRule ^sitemaps/sitemap_1.xml - [L]
 ```

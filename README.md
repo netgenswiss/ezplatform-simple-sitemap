@@ -1,7 +1,7 @@
 Prime eZ Sitemap Bundle
 -----------------------
 
-Prime eZ Sitemap Bundle provides the Google sitemap functionality
+Prime eZ Sitemap Bundle provides the Google sitemap functionality.
 
 License, docs and installation instructions
 -------------------------------------------

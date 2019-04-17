@@ -4,90 +4,60 @@ namespace Prime\Bundle\EzSiteMapBundle\Controller;
 
 use eZ\Publish\Core\MVC\ConfigResolverInterface;
 use Netgen\Bundle\EzPlatformSiteApiBundle\Controller\Controller;
-use Netgen\Bundle\OpenGraphBundle\MetaTag\CollectorInterface;
-use Prime\EzSiteMapBundle\Sitemap\SitemapIndex;
+use Prime\EzSiteMap\Factory\SitemapFactory;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Symfony\Component\Routing\RouterInterface;
 
-class SitemapController extends Controller
+final class SitemapController extends Controller
 {
-
-    /**
-     * @var ConfigResolverInterface
-     */
-    protected $configResolver;
-
-    /**
-     * @var RouterInterface
-     */
-    protected $router;
-
-    /**
-     * @var CollectorInterface
-     */
-    protected $tagCollector;
-
-    /**
-     * @var string
-     */
-    protected $domain;
-
     /**
      * @var string
      */
     protected $webDir;
 
     /**
-     * @var string
+     * @var \Prime\EzSiteMap\Factory\SitemapFactory
      */
-    protected $protocol = 'https';
+    protected $sitemapFactory;
+
+    /**
+     * @var \eZ\Publish\Core\MVC\ConfigResolverInterface
+     */
+    private $configResolver;
 
     /**
      * SitemapController constructor.
-     * @param $configResolver ConfigResolverInterface
-     * @param $router RouterInterface
-     * @param $tagCollector CollectorInterface
-     * @param $domain string
-     * @param $webDir string
+     *
+     * @param \eZ\Publish\Core\MVC\ConfigResolverInterface $configResolver
+     * @param \Prime\EzSiteMap\Factory\SitemapFactory $sitemapFactory
+     * @param string $webDir
      */
-    public function __construct( ConfigResolverInterface $configResolver, RouterInterface $router, CollectorInterface $tagCollector, $domain, $webDir)
+    public function __construct(ConfigResolverInterface $configResolver, SitemapFactory $sitemapFactory, string $webDir)
     {
-        $this->configResolver = $configResolver;
-        $this->router = $router;
-        $this->tagCollector = $tagCollector;
-        $this->domain = $domain;
         $this->webDir = $webDir;
+        $this->sitemapFactory = $sitemapFactory;
+        $this->configResolver = $configResolver;
     }
 
-    public function getSitemap()
+    /**
+     * Returns valid response with sitemap contents
+     * or throws 404
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
+     *
+     * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     */
+    public function getSitemap(): Response
     {
-        $sitemapsDir = $this->webDir . '/sitemaps';
+        $sitemap = $this->sitemapFactory->getSitemapIndex($this->webDir);
 
-        if(!file_exists($sitemapsDir)){
-            throw new NotFoundHttpException();
-        }
-
-        $sitemap = new SitemapIndex();
-
-        $sitemapFiles = array_diff(scandir( $sitemapsDir, SCANDIR_SORT_ASCENDING), ['..', '.']);
-        if(!empty($sitemapFiles)){
-            foreach($sitemapFiles as $sitemapFile){
-                if(is_dir($sitemapFile)){
-                    continue;
-                }
-                $loc = $this->protocol . "://" . $this->domain . '/sitemaps/' . $sitemapFile;
-                $lastModified = filemtime($sitemapsDir . '/' . $sitemapFile);
-                $sitemap->addSitemap($loc, $lastModified);
-            }
-        }
-
-        $response = new Response($sitemap->export());
+        $response = new Response($sitemap);
         $response->headers->set('Content-Type','text/xml');
         $response->setCharset('utf-8');
         $response->setPublic();
         $response->setVary('Accept-Encoding');
-        $response->setSharedMaxAge( 3600 );
+        $response->setSharedMaxAge(
+            $this->configResolver->getParameter('sitemap.shared_max_age', 'prime.ez_sitemap')
+        );
 
         return $response;
     }

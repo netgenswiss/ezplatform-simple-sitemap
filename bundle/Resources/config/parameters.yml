@@ -1,5 +1,8 @@
 parameters:
     prime.ez_sitemap.default.sitemap.domain: '%ngsite.default.site_domain%'
+    prime.ez_sitemap.default.sitemap.protocol: 'https'
+    prime.ez_sitemap.default.sitemap.sitemaps_index_path: 'sitemaps'
+    prime.ez_sitemap.default.sitemap.shared_max_age: 3600
     prime.ez_sitemap.default.sitemap.content_type_list:
         - ng_article
         - ng_feedback_form
