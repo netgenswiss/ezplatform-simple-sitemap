@@ -1,0 +1,8 @@
+parameters:
+    ignoreErrors:
+         -
+             message: '#Property Prime\\Bundle\\EzSiteMapBundle\\Command\\GenerateSitemapCommand::\$urlAliasService has unknown class eZ\\Publish\\API\\Repository\\UrlAliasService as its type.#'
+             path: bundle/Command/GenerateSitemapCommand.php
+         -
+             message: '#Parameter \$urlAliasService of method Prime\\Bundle\\EzSiteMapBundle\\Command\\GenerateSitemapCommand::__construct\(\) has invalid typehint type eZ\\Publish\\API\\Repository\\UrlAliasService.#'
+             path: bundle/Command/GenerateSitemapCommand.php

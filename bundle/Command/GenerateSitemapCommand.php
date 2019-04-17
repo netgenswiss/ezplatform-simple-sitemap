@@ -6,7 +6,6 @@ namespace Prime\Bundle\EzSiteMapBundle\Command;
 
 use eZ\Publish\API\Repository\UrlAliasService;
 use eZ\Publish\API\Repository\Values\Content\Search\SearchResult;
-use eZ\Publish\Core\MVC\ConfigResolverInterface;
 use eZ\Publish\Core\QueryType\QueryTypeRegistry;
 use Netgen\EzPlatformSiteApi\API\Site;
 use Netgen\EzPlatformSiteApi\API\Values\Location;
@@ -29,14 +28,9 @@ final class GenerateSitemapCommand extends Command
     public const SITEMAP_NAME_PATTERN = 'sitemap_#INDEX#.xml';
 
     /**
-     * @var ConfigResolverInterface
+     * @var \Netgen\EzPlatformSiteApi\API\Site
      */
-    protected $configResolver;
-
-    /**
-     * @var \Netgen\EzPlatformSiteApi\API\FilterService
-     */
-    protected $filterService;
+    protected $site;
 
     /**
      * @var \eZ\Publish\API\Repository\UrlAliasService
