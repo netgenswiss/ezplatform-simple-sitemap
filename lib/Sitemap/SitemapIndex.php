@@ -25,6 +25,14 @@ class SitemapIndex
         $this->sitemapIndex->setAttribute('xmlns', 'http://www.sitemaps.org/schemas/sitemap/0.9');
     }
 
+    public function __toString(): string
+    {
+        $this->doc->appendChild($this->sitemapIndex);
+        $this->doc->formatOutput = true;
+
+        return $this->doc->saveXML();
+    }
+
     public function addSitemap(string $loc, int $lastModTimestamp): void
     {
         $sitemap = $this->doc->createElement('sitemap');
@@ -38,14 +46,6 @@ class SitemapIndex
     }
 
     public function export(): string
-    {
-        $this->doc->appendChild($this->sitemapIndex);
-        $this->doc->formatOutput = true;
-
-        return $this->doc->saveXML();
-    }
-
-    public function __toString(): string
     {
         $this->doc->appendChild($this->sitemapIndex);
         $this->doc->formatOutput = true;

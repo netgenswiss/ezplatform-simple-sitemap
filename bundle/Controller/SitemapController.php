@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Prime\Bundle\EzSiteMapBundle\Controller;
 
 use eZ\Publish\Core\MVC\ConfigResolverInterface;
@@ -40,18 +42,18 @@ final class SitemapController extends Controller
 
     /**
      * Returns valid response with sitemap contents
-     * or throws 404
-     *
-     * @return \Symfony\Component\HttpFoundation\Response
+     * or throws 404.
      *
      * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     *
+     * @return \Symfony\Component\HttpFoundation\Response
      */
     public function getSitemap(): Response
     {
         $sitemap = $this->sitemapFactory->getSitemapIndex($this->webDir);
 
         $response = new Response($sitemap);
-        $response->headers->set('Content-Type','text/xml');
+        $response->headers->set('Content-Type', 'text/xml');
         $response->setCharset('utf-8');
         $response->setPublic();
         $response->setVary('Accept-Encoding');

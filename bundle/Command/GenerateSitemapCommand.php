@@ -8,10 +8,9 @@ use eZ\Publish\API\Repository\UrlAliasService;
 use eZ\Publish\API\Repository\Values\Content\Search\SearchResult;
 use eZ\Publish\Core\MVC\ConfigResolverInterface;
 use eZ\Publish\Core\QueryType\QueryTypeRegistry;
-use Netgen\EzPlatformSiteApi\API\Values\Location;
 use Netgen\EzPlatformSiteApi\API\Site;
+use Netgen\EzPlatformSiteApi\API\Values\Location;
 use Prime\EzSiteMap\Query\SitemapQueryType;
-use Prime\EzSiteMap\Factory\SitemapFactory;
 use Prime\EzSiteMap\Sitemap\Configuration;
 use Prime\EzSiteMap\Sitemap\Sitemap;
 use Symfony\Component\Console\Command\Command;
@@ -19,7 +18,6 @@ use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
-
 
 final class GenerateSitemapCommand extends Command
 {
@@ -109,6 +107,34 @@ final class GenerateSitemapCommand extends Command
         $this->generateGoogleSitemap($input, $output);
 
         return 0;
+    }
+
+    protected function getRootLocation(): Location
+    {
+        return $this->site
+            ->getLoadService()
+            ->loadLocation(
+                $this->site->getSettings()->rootLocationId
+            );
+    }
+
+    protected function getPath()
+    {
+        return $this->webDir . '/' . $this->sitemapConfiguration->getSitemapsIndexPath();
+    }
+
+    protected function getFilePath($file)
+    {
+        return $this->getPath() . '/' . $file;
+    }
+
+    protected function checkPath()
+    {
+        $filesystem = new Filesystem();
+
+        if (!$filesystem->exists($this->getPath())) {
+            $filesystem->mkdir($this->getPath(), 0775);
+        }
     }
 
     private function generateGoogleSitemap(InputInterface $input, OutputInterface $output)
@@ -213,14 +239,12 @@ final class GenerateSitemapCommand extends Command
     private function addItemToSitemap(Sitemap $sitemap, Location $location)
     {
         try {
-
             $locationPath = $this->urlAliasService
                 ->reverseLookup(
                     $location->innerLocation,
                     $location->contentInfo->mainLanguageCode,
                     true
                 )->path;
-
         } catch (\eZ\Publish\API\Repository\Exceptions\NotFoundException $e) {
             return;
         }
@@ -229,33 +253,5 @@ final class GenerateSitemapCommand extends Command
         $priority = 1 - (($location->depth - 1) * 0.1);
 
         $sitemap->addEntry($mainUrl, $location->contentInfo->modificationDate, $priority);
-    }
-
-    protected function getRootLocation(): Location
-    {
-        return $this->site
-            ->getLoadService()
-            ->loadLocation(
-                $this->site->getSettings()->rootLocationId
-            );
-    }
-
-    protected function getPath()
-    {
-        return $this->webDir . '/' . $this->sitemapConfiguration->getSitemapsIndexPath();
-    }
-
-    protected function getFilePath($file)
-    {
-        return $this->getPath() . '/'. $file;
-    }
-
-    protected function checkPath()
-    {
-        $filesystem = new Filesystem();
-
-        if (!$filesystem->exists($this->getPath())) {
-            $filesystem->mkdir($this->getPath(), 0775);
-        }
     }
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Prime\EzSiteMap\Sitemap;
 
 use eZ\Publish\Core\MVC\ConfigResolverInterface;
@@ -57,7 +59,3 @@ class Configuration
             ->getParameter('sitemap.max_items_per_sitemap', 'prime.ez_sitemap');
     }
 }
-
-
-
-

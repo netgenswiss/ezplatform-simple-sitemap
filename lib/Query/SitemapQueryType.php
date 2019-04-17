@@ -1,16 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Prime\EzSiteMap\Query;
 
+use eZ\Publish\API\Repository\Values\Content\Location;
 use eZ\Publish\API\Repository\Values\Content\LocationQuery;
 use eZ\Publish\API\Repository\Values\Content\Query\Criterion;
 use eZ\Publish\API\Repository\Values\Content\Query\SortClause;
 use eZ\Publish\Core\QueryType\OptionsResolverBasedQueryType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use eZ\Publish\API\Repository\Values\Content\Location;
 
 class SitemapQueryType extends OptionsResolverBasedQueryType
 {
+    public static function getName()
+    {
+        return self::class;
+    }
+
     protected function doGetQuery(array $parameters)
     {
         /** @var Location $rootLocation */
@@ -28,7 +35,7 @@ class SitemapQueryType extends OptionsResolverBasedQueryType
         );
         $query->sortClauses = [
             new SortClause\Location\Depth(LocationQuery::SORT_ASC),
-            new SortClause\DatePublished(LocationQuery::SORT_DESC)
+            new SortClause\DatePublished(LocationQuery::SORT_DESC),
         ];
 
         if (isset($parameters['offset'])) {
@@ -51,12 +58,4 @@ class SitemapQueryType extends OptionsResolverBasedQueryType
         $optionsResolver->setAllowedTypes('rootLocation', Location::class);
         $optionsResolver->setRequired(['contentTypeList', 'rootLocation', 'offset', 'limit']);
     }
-
-    public static function getName()
-    {
-        return self::class;
-    }
 }
-
-
-

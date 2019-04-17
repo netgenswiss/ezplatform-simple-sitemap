@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Prime\EzSiteMap\Factory;
 
 use Prime\EzSiteMap\Sitemap\SitemapIndex;
@@ -39,28 +41,28 @@ class SitemapFactory
     /**
      * @param string $webroot
      *
-     * @return \Prime\EzSiteMap\SitemapIndex
-     *
      * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     *
+     * @return \Prime\EzSiteMap\SitemapIndex
      */
     public function getSitemapIndex(string $webroot): SitemapIndex
     {
         $sitemapsDir = $webroot . '/' . $this->sitemaps;
 
-        if(!file_exists($sitemapsDir)){
+        if (!file_exists($sitemapsDir)) {
             throw new NotFoundHttpException();
         }
 
         $sitemap = new SitemapIndex();
 
-        $sitemapFiles = array_diff(scandir( $sitemapsDir, SCANDIR_SORT_ASCENDING), ['..', '.']);
+        $sitemapFiles = array_diff(scandir($sitemapsDir, SCANDIR_SORT_ASCENDING), ['..', '.']);
 
-        if(!empty($sitemapFiles)){
-            foreach($sitemapFiles as $sitemapFile){
-                if(is_dir($sitemapFile)){
+        if (!empty($sitemapFiles)) {
+            foreach ($sitemapFiles as $sitemapFile) {
+                if (is_dir($sitemapFile)) {
                     continue;
                 }
-                $loc = $this->protocol . "://" . $this->domain . '/' . $this->sitemaps . '/' . $sitemapFile;
+                $loc = $this->protocol . '://' . $this->domain . '/' . $this->sitemaps . '/' . $sitemapFile;
                 $lastModified = filemtime($sitemapsDir . '/' . $sitemapFile);
                 $sitemap->addSitemap($loc, $lastModified);
             }
