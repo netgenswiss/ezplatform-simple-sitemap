@@ -39,6 +39,13 @@ parameters:
     prime.ez_sitemap.default.sitemap.max_items_per_sitemap: 500
 
 
+### Include routing in main `routing.yml` file:
+
+```yaml
+prime_ez_sitemap:
+    resource: '@PrimeEzSiteMapBundle/Resources/config/routing.yml'
+```
+
 ### Clear the caches
 
 Clear the eZ Publish caches with the following command:
