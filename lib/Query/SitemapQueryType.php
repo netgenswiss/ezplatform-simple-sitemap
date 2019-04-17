@@ -44,17 +44,17 @@ class SitemapQueryType extends OptionsResolverBasedQueryType
 
     protected function configureOptions(OptionsResolver $optionsResolver)
     {
+        $optionsResolver->setDefined(['offset', 'limit', 'contentTypeList', 'rootLocation']);
         $optionsResolver->setAllowedTypes('offset', 'int');
         $optionsResolver->setAllowedTypes('limit', 'int');
         $optionsResolver->setAllowedTypes('contentTypeList', 'array');
         $optionsResolver->setAllowedTypes('rootLocation', Location::class);
-
         $optionsResolver->setRequired(['contentTypeList', 'rootLocation', 'offset', 'limit']);
     }
 
     public static function getName()
     {
-        return 'SitemapLocations';
+        return self::class;
     }
 }
 

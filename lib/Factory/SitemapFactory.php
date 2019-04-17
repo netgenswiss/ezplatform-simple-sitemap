@@ -2,7 +2,7 @@
 
 namespace Prime\EzSiteMap\Factory;
 
-use Prime\EzSiteMap\SitemapIndex;
+use Prime\EzSiteMap\Sitemap\SitemapIndex;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class SitemapFactory
@@ -33,6 +33,7 @@ class SitemapFactory
     {
         $this->domain = $domain;
         $this->protocol = $protocol;
+        $this->sitemaps = $sitemaps;
     }
 
     /**
@@ -53,6 +54,7 @@ class SitemapFactory
         $sitemap = new SitemapIndex();
 
         $sitemapFiles = array_diff(scandir( $sitemapsDir, SCANDIR_SORT_ASCENDING), ['..', '.']);
+
         if(!empty($sitemapFiles)){
             foreach($sitemapFiles as $sitemapFile){
                 if(is_dir($sitemapFile)){

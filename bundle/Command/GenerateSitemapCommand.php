@@ -10,6 +10,7 @@ use eZ\Publish\Core\MVC\ConfigResolverInterface;
 use eZ\Publish\Core\QueryType\QueryTypeRegistry;
 use Netgen\EzPlatformSiteApi\API\Values\Location;
 use Netgen\EzPlatformSiteApi\API\Site;
+use Prime\EzSiteMap\Query\SitemapQueryType;
 use Prime\EzSiteMap\Factory\SitemapFactory;
 use Prime\EzSiteMap\Sitemap\Configuration;
 use Prime\EzSiteMap\Sitemap\Sitemap;
@@ -72,7 +73,7 @@ final class GenerateSitemapCommand extends Command
         QueryTypeRegistry $queryTypeRegistry,
         Site $site,
         UrlAliasService $urlAliasService,
-        Configuration $sitemapFactory,
+        Configuration $sitemapConfiguration,
         string $webDir
     ) {
         $this->queryTypeRegistry = $queryTypeRegistry;
@@ -138,7 +139,7 @@ final class GenerateSitemapCommand extends Command
             $output->writeln('');
 
             $sitemap = new Sitemap();
-            $results = $this->findLocations($this->maxItemsPerSitemap * ($i - 1), $this->maxItemsPerSitemap);
+            $results = $this->findLocations($this->sitemapConfiguration->getMaxItemsPerPage() * ($i - 1), $this->sitemapConfiguration->getMaxItemsPerPage());
             $progress = new ProgressBar($output);
             $progress->start(count($results->searchHits));
 
@@ -176,11 +177,11 @@ final class GenerateSitemapCommand extends Command
 
     private function findLocations(int $offset = 0, int $limit = 500): SearchResult
     {
-        $queryType = $this->queryTypeRegistry->getQueryType('SitemapLocations');
+        $queryType = $this->queryTypeRegistry->getQueryType(SitemapQueryType::class);
         $query = $queryType->getQuery(
             [
                 'contentTypeList' => $this->sitemapConfiguration->getContentTypeList(),
-                'rootLocation' => $this->getRootLocation(),
+                'rootLocation' => $this->getRootLocation()->innerLocation,
                 'limit' => $limit,
                 'offset' => $offset,
             ]
@@ -193,11 +194,11 @@ final class GenerateSitemapCommand extends Command
 
     private function getTotalCount(): int
     {
-        $queryType = $this->queryTypeRegistry->getQueryType('SitemapLocations');
+        $queryType = $this->queryTypeRegistry->getQueryType(SitemapQueryType::class);
         $query = $queryType->getQuery(
             [
                 'contentTypeList' => $this->sitemapConfiguration->getContentTypeList(),
-                'rootLocation' => $this->getRootLocation(),
+                'rootLocation' => $this->getRootLocation()->innerLocation,
                 'limit' => 0,
                 'offset' => 0,
             ]

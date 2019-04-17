@@ -29,3 +29,8 @@ services:
         class: Prime\EzSiteMap\Sitemap\Configuration
         arguments:
             - '@ezpublish.config.resolver'
+
+    prime.ez_sitemap.query:
+        class: Prime\EzSiteMap\Query\SitemapQueryType
+        tags:
+            - { name: ezpublish.query_type }
