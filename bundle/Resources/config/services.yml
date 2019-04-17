@@ -2,12 +2,10 @@ services:
     prime.ez_sitemap.command.generate_sitemap:
         class: Prime\Bundle\EzSiteMapBundle\Command\GenerateSitemapCommand
         arguments:
-            - '@ezpublish.config.resolver'
-            - '@netgen.ezplatform_site.filter_service'
+            - '@ezpublish.query_type.registry'
+            - '@netgen.ezplatform_site.core.site'
             - '@ezpublish.api.service.url_alias'
-            - '%prime.ez_sitemap.default.sitemap.domain%'
-            - '%prime.ez_sitemap.default.sitemap.content_type_list%'
-            - '%prime.ez_sitemap.default.sitemap.max_items_per_sitemap%'
+            - '@prime.ez_sitemap.configuration'
             - '%webroot_dir%'
         tags:
             -  { name: console.command }
@@ -17,7 +15,7 @@ services:
         arguments:
             - '%prime.ez_sitemap.default.sitemap.domain%'
             - '%prime.ez_sitemap.default.sitemap.protocol%'
-            - '%prime.ez_sitemap.default.sitemap.sitemaps%'
+            - '%prime.ez_sitemap.default.sitemap.sitemaps_index_path%'
 
     prime.ez_sitemap.controller.sitemap:
         class: Prime\Bundle\EzSiteMapBundle\Controller\SitemapController
@@ -27,3 +25,7 @@ services:
             - '@prime.ez_sitemap.factory'
             - '%webroot_dir%'
 
+    prime.ez_sitemap.configuration:
+        class: Prime\EzSiteMap\Sitemap\Configuration
+        arguments:
+            - '@ezpublish.config.resolver'

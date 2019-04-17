@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Prime\EzSiteMap;
+namespace Prime\EzSiteMap\Sitemap;
 
 use DOMDocument;
 

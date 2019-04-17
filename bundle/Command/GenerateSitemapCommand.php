@@ -10,6 +10,7 @@ use eZ\Publish\Core\MVC\ConfigResolverInterface;
 use eZ\Publish\Core\QueryType\QueryTypeRegistry;
 use Netgen\EzPlatformSiteApi\API\Values\Location;
 use Netgen\EzPlatformSiteApi\API\Site;
+use Prime\EzSiteMap\Factory\SitemapFactory;
 use Prime\EzSiteMap\Sitemap\Configuration;
 use Prime\EzSiteMap\Sitemap\Sitemap;
 use Symfony\Component\Console\Command\Command;
@@ -19,7 +20,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
 
-class GenerateSitemapCommand extends Command
+final class GenerateSitemapCommand extends Command
 {
     /**
      * If we have multiple sitemaps, generate sitemap names using the following pattern.
@@ -71,7 +72,7 @@ class GenerateSitemapCommand extends Command
         QueryTypeRegistry $queryTypeRegistry,
         Site $site,
         UrlAliasService $urlAliasService,
-        Configuration $sitemapConfiguration,
+        Configuration $sitemapFactory,
         string $webDir
     ) {
         $this->queryTypeRegistry = $queryTypeRegistry;
