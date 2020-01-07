@@ -6,16 +6,17 @@ services:
             - '@netgen.ezplatform_site.core.site'
             - '@ezpublish.api.service.url_alias'
             - '@prime.ez_sitemap.configuration'
+            - '@router'
             - '%webroot_dir%'
+        calls:
+            - [setSiteAccess, ['@ezpublish.siteaccess']]
         tags:
-            -  { name: console.command }
+            - { name: console.command }
 
     prime.ez_sitemap.factory:
         class: Prime\EzSiteMap\Factory\SitemapFactory
         arguments:
-            - '%prime.ez_sitemap.default.sitemap.domain%'
-            - '%prime.ez_sitemap.default.sitemap.protocol%'
-            - '%prime.ez_sitemap.default.sitemap.sitemaps_index_path%'
+            - '@ezpublish.config.resolver'
 
     prime.ez_sitemap.controller.sitemap:
         class: Prime\Bundle\EzSiteMapBundle\Controller\SitemapController

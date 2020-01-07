@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Prime\EzSiteMap\Factory;
 
+use eZ\Publish\Core\MVC\ConfigResolverInterface;
 use Prime\EzSiteMap\Sitemap\SitemapIndex;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -31,11 +32,11 @@ class SitemapFactory
      * @param string $protocol
      * @param string $sitemaps
      */
-    public function __construct(string $domain, string $protocol, string $sitemaps)
+    public function __construct(ConfigResolverInterface $configResolver)
     {
-        $this->domain = $domain;
-        $this->protocol = $protocol;
-        $this->sitemaps = $sitemaps;
+        $this->domain = $configResolver->getParameter('sitemap.domain', 'prime.ez_sitemap');
+        $this->protocol = $configResolver->getParameter('sitemap.protocol', 'prime.ez_sitemap');
+        $this->sitemaps = $configResolver->getParameter('sitemap.sitemaps_index_path', 'prime.ez_sitemap');
     }
 
     /**

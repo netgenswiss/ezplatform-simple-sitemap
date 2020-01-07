@@ -17,15 +17,19 @@ use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
+use eZ\Publish\Core\MVC\Symfony\SiteAccess;
+use eZ\Publish\Core\MVC\Symfony\SiteAccess\SiteAccessAware;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Routing\RouterInterface;
 
-final class GenerateSitemapCommand extends Command
+final class GenerateSitemapCommand extends Command implements SiteAccessAware
 {
     /**
      * If we have multiple sitemaps, generate sitemap names using the following pattern.
      *
      * @var string
      */
-    public const SITEMAP_NAME_PATTERN = 'sitemap_#INDEX#.xml';
+    public const SITEMAP_NAME_PATTERN = 'sitemap_#SITEACCESS#_#INDEX#.xml';
 
     /**
      * @var \Netgen\EzPlatformSiteApi\API\Site
@@ -53,6 +57,11 @@ final class GenerateSitemapCommand extends Command
     protected $queryTypeRegistry;
 
     /**
+     * @var \eZ\Publish\Core\MVC\Symfony\SiteAccess
+     */
+    protected $siteAccess;
+
+    /**
      * GenerateSitemapCommand constructor.
      *
      * @param \eZ\Publish\Core\QueryType\QueryTypeRegistry $queryTypeRegistry
@@ -66,6 +75,7 @@ final class GenerateSitemapCommand extends Command
         Site $site,
         UrlAliasService $urlAliasService,
         Configuration $sitemapConfiguration,
+        RouterInterface $router,
         string $webDir
     ) {
         $this->queryTypeRegistry = $queryTypeRegistry;
@@ -73,8 +83,14 @@ final class GenerateSitemapCommand extends Command
         $this->urlAliasService = $urlAliasService;
         $this->sitemapConfiguration = $sitemapConfiguration;
         $this->webDir = $webDir;
+        $this->router = $router;
 
         parent::__construct();
+    }
+
+    public function setSiteAccess(SiteAccess $siteAccess = null)
+    {
+        $this->siteAccess = $siteAccess;
     }
 
     /**
@@ -150,7 +166,11 @@ final class GenerateSitemapCommand extends Command
         $this->checkPath();
 
         for ($i = 1; $i <= $sitemapFileCount; ++$i) {
+
             $sitemapName = preg_replace('/#INDEX#/i', $i, self::SITEMAP_NAME_PATTERN);
+            $sitemapName = preg_replace('/#SITEACCESS#/i', $this->siteAccess->name, $sitemapName);
+
+
             $sitemapWebPath = $this->sitemapConfiguration->getSitemapsIndexPath() . '/' . $sitemapName;
             $sitemapFileSystemPath = $this->webDir . '/' . $sitemapWebPath;
 
@@ -232,18 +252,10 @@ final class GenerateSitemapCommand extends Command
 
     private function addItemToSitemap(Sitemap $sitemap, Location $location)
     {
-        try {
-            $locationPath = $this->urlAliasService
-                ->reverseLookup(
-                    $location->innerLocation,
-                    $location->contentInfo->mainLanguageCode,
-                    true
-                )->path;
-        } catch (\eZ\Publish\API\Repository\Exceptions\NotFoundException $e) {
-            return;
-        }
+        $path = $this->router->generate($location, ['siteaccess' => $this->siteAccess->name], UrlGeneratorInterface::RELATIVE_PATH);
 
-        $mainUrl = $this->sitemapConfiguration->getProtocol() . '://' . $this->sitemapConfiguration->getDomain() . $locationPath;
+        $mainUrl = $this->sitemapConfiguration->getProtocol() . '://' . $this->sitemapConfiguration->getDomain() . $path;
+
         $priority = 1 - (($location->depth - 1) * 0.1);
 
         $sitemap->addEntry($mainUrl, $location->contentInfo->modificationDate, $priority);
