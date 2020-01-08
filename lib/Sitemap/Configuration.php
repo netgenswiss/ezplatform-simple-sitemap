@@ -58,4 +58,15 @@ class Configuration
         return $this->configResolver
             ->getParameter('sitemap.max_items_per_sitemap', 'prime.ez_sitemap');
     }
+
+    public function getExcludedNodes(): array
+    {
+        $excludesNodes = $this->configResolver->getParameter('sitemap.excluded_nodes', 'prime.ez_sitemap');
+
+        if (is_array($excludesNodes)) {
+            return $excludesNodes;
+        }
+
+        return [];
+    }
 }

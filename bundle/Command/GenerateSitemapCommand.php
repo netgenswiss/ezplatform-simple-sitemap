@@ -204,7 +204,8 @@ final class GenerateSitemapCommand extends Command implements SiteAccessAware
         $existingSitemapFiles = array_diff(scandir($this->getPath(), SCANDIR_SORT_ASCENDING), ['..', '.']);
 
         foreach ($existingSitemapFiles as $existingSitemapFile) {
-            if (!in_array($existingSitemapFile, $sitemapFiles, true)) {
+            if (!in_array($existingSitemapFile, $sitemapFiles, true)
+                && preg_match('/'.$this->siteAccess->name.'/', $existingSitemapFile)) {
                 $sitemapFileSystemPath = $this->getFilePath($existingSitemapFile);
                 unlink($sitemapFileSystemPath);
             }
@@ -221,6 +222,7 @@ final class GenerateSitemapCommand extends Command implements SiteAccessAware
         $query = $queryType->getQuery(
             [
                 'contentTypeList' => $this->sitemapConfiguration->getContentTypeList(),
+                'excludedNodes' => $this->getExcludedSubtrees(),
                 'rootLocation' => $this->getRootLocation()->innerLocation,
                 'limit' => $limit,
                 'offset' => $offset,
@@ -238,6 +240,7 @@ final class GenerateSitemapCommand extends Command implements SiteAccessAware
         $query = $queryType->getQuery(
             [
                 'contentTypeList' => $this->sitemapConfiguration->getContentTypeList(),
+                'excludedNodes' => $this->getExcludedSubtrees(),
                 'rootLocation' => $this->getRootLocation()->innerLocation,
                 'limit' => 0,
                 'offset' => 0,
@@ -248,6 +251,24 @@ final class GenerateSitemapCommand extends Command implements SiteAccessAware
             ->getFilterService()
             ->filterLocations($query)
             ->totalCount;
+    }
+
+    protected function getExcludedSubtrees()
+    {
+        $excludedNodes = $this->sitemapConfiguration->getExcludedNodes();
+
+        $excludedLocationValues = [];
+
+        foreach ($excludedNodes as $node) {
+
+            try {
+                $excludedLocationValues[] = $this->site->getLoadService()->loadLocation($node);
+            } catch (\Exception $exception) {
+
+            }
+        }
+
+        return $excludedLocationValues;
     }
 
     private function addItemToSitemap(Sitemap $sitemap, Location $location)

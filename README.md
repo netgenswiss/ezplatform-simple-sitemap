@@ -6,8 +6,8 @@ Prime eZ Sitemap Bundle provides the Google sitemap functionality.
 License, docs and installation instructions
 -------------------------------------------
 
-[Installation instructions](doc/INSTALL.md)
+[Installation instructions](docs/INSTALL.md)
 
-[Documentation](doc/DOC.md)
+[Documentation](docs/DOC.md)
 
-[Changelog](doc/CHANGELOG.md)
+[Changelog](docs/CHANGELOG.md)
