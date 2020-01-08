@@ -25,14 +25,23 @@ class SitemapQueryType extends OptionsResolverBasedQueryType
         $contentTypes = $parameters['contentTypeList'];
 
         $query = new LocationQuery();
-        $query->filter = new Criterion\LogicalAnd(
-            [
-                new Criterion\Subtree($rootLocation->pathString),
-                new Criterion\Visibility(Criterion\Visibility::VISIBLE),
-                new Criterion\Location\IsMainLocation(Criterion\Location\IsMainLocation::MAIN),
-                new Criterion\ContentTypeIdentifier($contentTypes),
-            ]
-        );
+
+        $criteria = [
+            new Criterion\Subtree($rootLocation->pathString),
+            new Criterion\Visibility(Criterion\Visibility::VISIBLE),
+            new Criterion\Location\IsMainLocation(Criterion\Location\IsMainLocation::MAIN),
+            new Criterion\ContentTypeIdentifier($contentTypes),
+        ];
+
+        if (isset($parameters['excludedNodes']) && !empty($parameters['excludedNodes'])) {
+
+            foreach ($parameters['excludedNodes'] as $node) {
+                $criteria[] = new Criterion\LogicalNot(new Criterion\Subtree($node->pathString));
+            }
+        }
+
+        $query->filter = new Criterion\LogicalAnd($criteria);
+
         $query->sortClauses = [
             new SortClause\Location\Depth(LocationQuery::SORT_ASC),
             new SortClause\DatePublished(LocationQuery::SORT_DESC),
@@ -51,11 +60,12 @@ class SitemapQueryType extends OptionsResolverBasedQueryType
 
     protected function configureOptions(OptionsResolver $optionsResolver)
     {
-        $optionsResolver->setDefined(['offset', 'limit', 'contentTypeList', 'rootLocation']);
+        $optionsResolver->setDefined(['offset', 'limit', 'contentTypeList', 'rootLocation', 'excludedNodes']);
         $optionsResolver->setAllowedTypes('offset', 'int');
         $optionsResolver->setAllowedTypes('limit', 'int');
         $optionsResolver->setAllowedTypes('contentTypeList', 'array');
         $optionsResolver->setAllowedTypes('rootLocation', Location::class);
+        $optionsResolver->setAllowedTypes('excludedNodes', 'array');
         $optionsResolver->setRequired(['contentTypeList', 'rootLocation', 'offset', 'limit']);
     }
 }

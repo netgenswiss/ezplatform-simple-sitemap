@@ -9,3 +9,4 @@ parameters:
         - ng_frontpage
         - ng_landing_page
     prime.ez_sitemap.default.sitemap.max_items_per_sitemap: 500
+    prime.ez_sitemap.default.sitemap.excluded_nodes: ~
