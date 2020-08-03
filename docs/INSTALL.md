@@ -29,6 +29,8 @@ public function registerBundles()
 ### Configuration
 
 You can configure the bundle using the following parameters:
+
+```yaml
 parameters:
     prime.ez_sitemap.default.sitemap.domain: '%ngmore.default.site_domain%'
     prime.ez_sitemap.default.sitemap.content_type_list:
@@ -37,7 +39,7 @@ parameters:
         - ng_frontpage
         - ng_landing_page
     prime.ez_sitemap.default.sitemap.max_items_per_sitemap: 500
-
+```
 
 ### Include routing in main `routing.yml` file:
 
