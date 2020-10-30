@@ -14,16 +14,13 @@ $ composer require primedigital/ez-sitemap
 
 ### Activate the bundle
 
-Activate required bundles in `app/AppKernel.php` file by adding them to the `$bundles` array in `registerBundles` method:
+Activate required bundles in `config/bundles.php` file:
 
 ```php
-public function registerBundles()
-{
+return [
     ...
-    $bundles[] = new Prime\Bundle\EzSiteMapBundle\PrimeEzSiteMapBundle();
-
-    return $bundles;
-}
+    Prime\Bundle\EzSiteMapBundle\PrimeEzSiteMapBundle::class => ['all' => true],
+];
 ```
 
 ### Configuration
